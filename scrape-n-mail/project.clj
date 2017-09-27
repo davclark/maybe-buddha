@@ -48,7 +48,8 @@
                 :compiler {:output-to "resources/public/js/compiled/scrape_n_mail.js"
                            :main scrape-n-mail.core
                            :optimizations :advanced
-                           :pretty-print false}}]}
+                           :pretty-print false
+                           :externs ["externs.js"] }}]}
 
   :figwheel {;; :http-server-root "public" ;; default and assumes "resources"
              ;; :server-port 3449 ;; default

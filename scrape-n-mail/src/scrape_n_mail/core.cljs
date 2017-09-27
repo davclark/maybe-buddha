@@ -55,17 +55,25 @@
 ; In retrospect, this was not really useful (these keys aren't secret).
 ; We're also hurting performance a little, but it's not relevant to our 
 ; use-case so I'm leaving it alone.
-; (defonce _ ; doesn't seem to fix the reload problem with sheets not being defined.
 (go (let [keys-resp (<! (http/get "keys.json"))]
+      ; (println keys-resp)
       (if (:success keys-resp)
         (let [config-keys 
-              (->
-                {:discoveryDocs ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
-                 :scope "https://www.googleapis.com/auth/spreadsheets.readonly"}
-                (merge (:body keys-resp))
-                ; We definitely need this to undo the auto-converstion to EDN
-                ; that http/get does
-                clj->js )]
+              (clj->js {:clientId "233834497336-aub2j24ggv45g1fs1ebe0470qnmsc38i.apps.googleusercontent.com",
+                        :apiKey "AIzaSyCbU3ETLqdJ7VDon7dBjm5lOql9Nf6c5Yc"
+                        :discoveryDocs ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
+                        :scope "https://www.googleapis.com/auth/spreadsheets.readonly"})
+              ; XXX this is the source of the
+              ; Error: conj on a map takes map entries or seqables of map entries
+              ; Not sure why it breaks when doing advanced compilation, not figwheel...
+              ; (->
+              ;   {:discoveryDocs ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
+              ;    :scope "https://www.googleapis.com/auth/spreadsheets.readonly"}
+              ;   (merge (:body keys-resp))
+              ;   ; We definitely need this to undo the auto-converstion to EDN
+              ;   ; that http/get does
+              ;   clj->js )
+              ]
           (.load js/gapi "client:auth2" #(init-client config-keys)) )
         #_(println keys-resp) )))
 
@@ -79,16 +87,18 @@
         [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"]
         ) )
     ; Since I already react to app-data above, I don't seem to need to again...
-    [:pre {:id "content"} 
-     (->> (:sheet-data @app-data)
-          ; For now, this is the criterion for which folks I look at
-          ; It'd be nice to figure out which are hiddne to play nicer with Svani's workflow
-          (filter #(s/includes? (aget % 0) "2017"))
-          ; Each line is a list, this joins them in to one string
-          (map #(s/join " " %))
-          ; Then we join the lines
-          (s/join "\n") )
-          ]
+    ; XXX I also added this if clause which is probably unnecessary
+    ; It did NOT resolve the TypeError: Cannot read property 'add' of undefined
+    (if (:sheet-data @app-data)
+      [:pre {:id "content"} 
+       (->> (:sheet-data @app-data)
+            ; For now, this is the criterion for which folks I look at
+            ; It'd be nice to figure out which are hiddne to play nicer with Svani's workflow
+            (filter #(s/includes? (aget % 0) "2017"))
+            ; Each line is a list, this joins them in to one string
+            (map #(s/join " " %))
+            ; Then we join the lines
+            (s/join "\n") )])
   ])
 
 (rum/mount (hello-world)
