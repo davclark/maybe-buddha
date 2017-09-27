@@ -13,19 +13,35 @@
 
 (defonce app-data (atom {:signed-in? false
                          :sheet-data nil}))
+(defonce wellbeing-sheet "1bv6vgW-HMTz0uhKDkrJoTg387b-WK6IFkFd9y6N96hA")
 
-(defn get-google-token []
-  (.. js/gapi.auth2 getAuthInstance -currentUser get getAuthResponse -id_token))
+(defn get-wellbeing-data []
+  (->
+    (.get js/gapi.client.sheets.spreadsheets.values
+          (clj->js {:spreadsheetId wellbeing-sheet
+                     :range "Form Responses!A1:F"}) )
+    (.then #(swap! app-data assoc :sheet-data (.. % -result -values))) ))
 
+
+(defn update-after-auth [is-signed-in]
+  (swap! app-data assoc :signed-in? is-signed-in)
+  (if is-signed-in
+    (get-wellbeing-data) 
+    (swap! app-data assoc :sheet-data nil) ))
+
+
+; This gets sent as a callback into the .load call for the gapi below in the "go" block
 (defn init-client [gapi_config]
   (-> (.init js/gapi.client gapi_config)
       (.then (let [is-signed-in (.. js/gapi.auth2 getAuthInstance -isSignedIn)]
                ; Set up a listener per Google's tutorial
-               (.listen is-signed-in #(swap! app-data assoc :signed-in? %))
+               (.listen is-signed-in update-after-auth)
                ; Also set the initial value
-               (->> (.get is-signed-in)
-                    (swap! app-data assoc :signed-in?) )))))
+               (update-after-auth  (.get is-signed-in)) ))))
 
+; In retrospect, this was not really useful (these keys aren't secret).
+; We're also hurting performance a little, but it's not relevant to our 
+; use-case so I'm leaving it alone.
 (go (let [keys-resp (<! (http/get "keys.json"))]
       (if (:success keys-resp)
         (let [config-keys 
