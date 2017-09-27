@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+    <link rel="icon" href="https://clojurescript.org/images/cljs-logo-icon-32.png">
+  </head>
+  <body>
+    <div id="app">
+      <h2>Wellness Scraper</h2>
+      <p>App is loading (or not)</p>
+    </div>
+    <script src="https://apis.google.com/js/api.js" type="text/javascript"></script>
+    <script src="js/compiled/scrape_n_mail.js" type="text/javascript"></script>
+    <!-- Something like the below could be more performant if things get complex -->
+    <!-- <script async defer src="https://apis.google.com/js/api.js" -->
+    <!--   onload="this.onload=function(){};handleClientLoad()" -->
+    <!--   onreadystatechange="if (this.readyState === 'complete') this.onload()"> -->
+    <!-- </script> -->
+  </body>
+</html>
