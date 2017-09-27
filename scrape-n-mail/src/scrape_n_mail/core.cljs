@@ -12,7 +12,8 @@
 
 ;; define your app data so that it doesn't get over-written on reload
 
-(defonce app-data (atom {:signed-in? false
+(defonce app-data (atom {:initialized false
+                         :signed-in? false
                          :sheet-data nil}))
 (defonce wellbeing-sheet "1bv6vgW-HMTz0uhKDkrJoTg387b-WK6IFkFd9y6N96hA")
 
@@ -37,17 +38,24 @@
 ; This gets sent as a callback into the .load call for the gapi below in the "go" block
 (defn init-client [gapi_config]
   (-> (.init js/gapi.client gapi_config)
-      (.then (let [is-signed-in (.. js/gapi.auth2 getAuthInstance -isSignedIn)]
+      ; I don't actually care about the response, but I need to do something with it maybe?
+      (.then #(let [response %
+                    is-signed-in (.. js/gapi.auth2 getAuthInstance -isSignedIn)]
                ; Set up a listener per Google's tutorial
                (.listen is-signed-in update-after-auth)
                ; Also set the initial value
                ; Unfortunrately, this often doesn't work if we were already signed in...
                ; I'm missing something
-               (update-after-auth (.get is-signed-in)) ))))
+               (update-after-auth (.get is-signed-in)) 
+               (swap! app-data assoc :initialized true) )
+             ; This is an error reason
+             #(println %)
+             )))
 
 ; In retrospect, this was not really useful (these keys aren't secret).
 ; We're also hurting performance a little, but it's not relevant to our 
 ; use-case so I'm leaving it alone.
+; (defonce _ ; doesn't seem to fix the reload problem with sheets not being defined.
 (go (let [keys-resp (<! (http/get "keys.json"))]
       (if (:success keys-resp)
         (let [config-keys 
@@ -65,10 +73,11 @@
   [:div
     [:h2 "Wellness Scraper"]
     [:p "First, we will authenticate you to Google, then get some data from the Wellenss spreadsheet"]
-    (if-not (:signed-in? (rum/react app-data))
-      [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
-      [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"]
-      )
+    (if (:initialized (rum/react app-data))
+      (if-not (:signed-in? @app-data)
+        [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
+        [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"]
+        ) )
     ; Since I already react to app-data above, I don't seem to need to again...
     [:pre {:id "content"} 
      (->> (:sheet-data @app-data)
