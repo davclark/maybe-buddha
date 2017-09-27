@@ -1,6 +1,7 @@
 (ns scrape-n-mail.core
     (:require [rum.core :as rum]
               [cljs-http.client :as http]
+              [clojure.string :as s]
               [cljs.core.async :refer [<!]])
     (:require-macros [cljs.core.async.macros :refer [go go-loop]])
     )
@@ -19,10 +20,13 @@
   (->
     (.get js/gapi.client.sheets.spreadsheets.values
           (clj->js {:spreadsheetId wellbeing-sheet
-                     :range "Form Responses!A1:F"}) )
+                    :range "Form Responses!A1:F"}) )
+    ; values is the parsed version
     (.then #(swap! app-data assoc :sheet-data (.. % -result -values))) ))
 
 
+; This gets registered below as the callback for when authorization state changes
+; It's also called once after the gapi client is set up to initialize things if we're already logged in
 (defn update-after-auth [is-signed-in]
   (swap! app-data assoc :signed-in? is-signed-in)
   (if is-signed-in
@@ -37,7 +41,9 @@
                ; Set up a listener per Google's tutorial
                (.listen is-signed-in update-after-auth)
                ; Also set the initial value
-               (update-after-auth  (.get is-signed-in)) ))))
+               ; Unfortunrately, this often doesn't work if we were already signed in...
+               ; I'm missing something
+               (update-after-auth (.get is-signed-in)) ))))
 
 ; In retrospect, this was not really useful (these keys aren't secret).
 ; We're also hurting performance a little, but it's not relevant to our 
@@ -49,9 +55,11 @@
                 {:discoveryDocs ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
                  :scope "https://www.googleapis.com/auth/spreadsheets.readonly"}
                 (merge (:body keys-resp))
+                ; We definitely need this to undo the auto-converstion to EDN
+                ; that http/get does
                 clj->js )]
           (.load js/gapi "client:auth2" #(init-client config-keys)) )
-        (println keys-resp) )))
+        #_(println keys-resp) )))
 
 (rum/defc hello-world < rum/reactive []
   [:div
@@ -61,9 +69,17 @@
       [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
       [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"]
       )
-    [:pre {:id "content"}]
-    ; [:h1 (:text @app-state)]
-    ; [:h3 "Edit this and watch it change!"]
+    ; Since I already react to app-data above, I don't seem to need to again...
+    [:pre {:id "content"} 
+     (->> (:sheet-data @app-data)
+          ; For now, this is the criterion for which folks I look at
+          ; It'd be nice to figure out which are hiddne to play nicer with Svani's workflow
+          (filter #(s/includes? (aget % 0) "2017"))
+          ; Each line is a list, this joins them in to one string
+          (map #(s/join " " %))
+          ; Then we join the lines
+          (s/join "\n") )
+          ]
   ])
 
 (rum/mount (hello-world)
