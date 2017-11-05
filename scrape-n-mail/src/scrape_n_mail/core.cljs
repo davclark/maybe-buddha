@@ -23,6 +23,7 @@
           (clj->js {:spreadsheetId wellbeing-sheet
                     :range "Form Responses!A1:F"}) )
     ; values is the parsed version
+    ; For now, we keep all the data - we can filter on the view
     (.then #(swap! app-data assoc :sheet-data (.. % -result -values))) ))
 
 
@@ -94,6 +95,7 @@
        (->> (:sheet-data @app-data)
             ; For now, this is the criterion for which folks I look at
             ; It'd be nice to figure out which are hiddne to play nicer with Svani's workflow
+            ; (filter #(aget % 0) (@app-data :sheet-data))
             (filter #(s/includes? (aget % 0) "2017"))
             ; Each line is a list, this joins them in to one string
             (map #(s/join " " %))

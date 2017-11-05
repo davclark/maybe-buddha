@@ -6,14 +6,15 @@
 
   :min-lein-version "2.7.1"
 
-  :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
-                 [org.clojure/clojurescript "1.9.908"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojurescript "1.9.229"]
                  [org.clojure/core.async  "0.3.443"]
                  [rum "0.10.8"]
                  [cljs-http "0.1.43"]
+                 [com.andrewmcveigh/cljs-time "0.5.0"]
                  ]
 
-  :plugins [[lein-figwheel "0.5.13"]
+  :plugins [[lein-figwheel "0.5.14"]
             [lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]]
 
   :source-paths ["src"]
@@ -48,8 +49,11 @@
                 :compiler {:output-to "resources/public/js/compiled/scrape_n_mail.js"
                            :main scrape-n-mail.core
                            :optimizations :advanced
-                           :pretty-print false
-                           :externs ["externs.js"] }}]}
+                           :pretty-print true ; this was false by default
+                           :pseudo-names true
+                           ; :externs ["externs.js"] 
+                           :infer-externs true
+                           }}]}
 
   :figwheel {;; :http-server-root "public" ;; default and assumes "resources"
              ;; :server-port 3449 ;; default
