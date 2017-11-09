@@ -2,13 +2,14 @@
     (:require [rum.core :as rum]
               [cljs-http.client :as http]
               [clojure.string :as s]
+              [cljs-time.format :as fmt]
               [cljs.core.async :refer [<!]])
     (:require-macros [cljs.core.async.macros :refer [go go-loop]])
     )
 
 (enable-console-print!)
 
-(println "This text is printed from src/scrape-n-mail/core.cljs. Edit it and see reloading in action.")
+; (println "This text is printed from src/scrape-n-mail/core.cljs.")
 
 ;; define your app data so that it doesn't get over-written on reload
 
@@ -16,6 +17,14 @@
                          :signed-in? false
                          :sheet-data nil}))
 (defonce wellbeing-sheet "1bv6vgW-HMTz0uhKDkrJoTg387b-WK6IFkFd9y6N96hA")
+
+(def goog-datetime (fmt/formatter "MM/dd/YYYY HH:mm:ss"))
+
+(defn parse-sheet [sheet-values]
+  (map (fn [dt & rst] (into [(fmt/parse goog-datetime dt)] rst)) sheet-values) )
+
+; This works - we need to deal with the fact that it's js!
+; (map #(fmt/parse goog-datetime (aget % 0)) [first-row])
 
 (defn get-wellbeing-data []
   (->
@@ -78,10 +87,11 @@
           (.load js/gapi "client:auth2" #(init-client config-keys)) )
         #_(println keys-resp) )))
 
+
 (rum/defc hello-world < rum/reactive []
   [:div
     [:h2 "Wellness Scraper"]
-    [:p "First, we will authenticate you to Google, then get some data from the Wellenss spreadsheet"]
+    [:p "First, we authenticate you to Google, then get some data from the Wellenss spreadsheet"]
     (if (:initialized (rum/react app-data))
       (if-not (:signed-in? @app-data)
         [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
@@ -93,9 +103,6 @@
     (if (:sheet-data @app-data)
       [:pre {:id "content"} 
        (->> (:sheet-data @app-data)
-            ; For now, this is the criterion for which folks I look at
-            ; It'd be nice to figure out which are hiddne to play nicer with Svani's workflow
-            ; (filter #(aget % 0) (@app-data :sheet-data))
             (filter #(s/includes? (aget % 0) "2017"))
             ; Each line is a list, this joins them in to one string
             (map #(s/join " " %))
