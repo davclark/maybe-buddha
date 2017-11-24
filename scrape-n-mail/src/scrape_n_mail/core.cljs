@@ -129,28 +129,22 @@
 
 
 (rum/defc hello-world < rum/reactive []
-  [:div
-    [:h2 "Wellness Scraper"]
-    [:p "First, we authenticate you to Google, then get some data from the Wellenss spreadsheet"]
-    (let [curr-data (rum/react app-data)]
-      (if (:initialized curr-data)
-        (if-not (:signed-in? curr-data)
-          [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
-          [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"]
-          ) )
-      (when-let [records (:sheet-data curr-data)]
-        [:ul {:id "content"} 
-         ; (->> (:sheet-data curr-data)
-              ; We currently assume all visible data is "current"
-              ; (filter #(s/includes? (aget % 0) "2017"))
-              ; Each line is a list, this joins them in to one string
-              (map #(vector :li (::held-name-altar %)) records)
-              ; (map #(join "\t" (vals %)))
-              ; (map #(str (::held-name-altar curr-data)
-              ; Then we join the lines
-              ;(join "\n") 
-              ]))
-  ])
+  (let [curr-data (rum/react app-data)]
+    [:div
+      [:h2 "Wellness Scraper"]
+      [:p "First, we authenticate you to Google, then get some data from the Wellenss spreadsheet"]
+        (if (:initialized curr-data)
+          (if-not (:signed-in? curr-data)
+            [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
+            [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"]) 
+          [:p "Initializing Google API"])
+
+        (when-let [records (:sheet-data curr-data)]
+          (into [:ul {:id "content"}]
+            ; We currently assume all visible data is "current"
+            ; (filter #(s/includes? (aget % 0) "2017"))
+            ; Each line is a list, this joins them in to one string
+            (map #(vector :li (::held-name-altar %)) records))) ]))
 
 (rum/mount (hello-world)
            (. js/document (getElementById "app")))
