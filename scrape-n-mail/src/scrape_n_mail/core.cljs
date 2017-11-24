@@ -1,14 +1,16 @@
 (ns scrape-n-mail.core
     (:require [rum.core :as rum]
               [cljs-http.client :as http]
-              [clojure.string :as s]
+              [clojure.string :refer [join split starts-with? trim]]
               [cljs-time.format :as fmt]
-              [cljs.core.async :refer [<!]])
+              ; dt is for datetime
+              [cljs-time.core :as dt]
+              [cljs.core.async :refer [<!]]
+              [cljs.spec :as s])
     (:require-macros [cljs.core.async.macros :refer [go go-loop]])
     )
 
-(enable-console-print!)
-
+; (enable-console-print!)
 ; (println "This text is printed from src/scrape-n-mail/core.cljs.")
 
 ;; define your app data so that it doesn't get over-written on reload
@@ -26,14 +28,52 @@
 ; This works - we need to deal with the fact that it's js!
 ; (map #(fmt/parse goog-datetime (aget % 0)) [first-row])
 
+; We begin to describe what kind of information is in one record
+; i.e., line in the spreadsheet
+
+(s/def ::when-submitted dt/date?)
+(s/def ::held-name-altar string?)
+(s/def ::held-name-public string?)
+(s/def ::procunciation-hints string?)
+(s/def ::is-group-or-class boolean?)
+; XXX This is copy-pasted validation. May need to examine to make sure it's good
+(def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
+(s/def ::submitter-email (s/and string? #(re-matches email-regex %)))
+(s/def ::submitter-name string?)
+
+(s/def ::held-person
+  (s/keys :req [::when-submitted  ; a last-updated field would also be nice
+                 ::held-name-altar ::held-name-public
+                 ::is-group-or-class
+                 ::submitter-email ::submitter-name]
+           :opt [::procunciation-hints]))
+
+(defn row-to-held-person [[timestamp name-for-altar _ pronunciation your-name your-email is-group? name-public]]
+  (merge
+    ; Our required fields
+    {::when-submitted (fmt/parse goog-datetime timestamp)
+     ::held-name-altar (trim name-for-altar)
+     ::held-name-public (if (empty? name-public) (first (split name-for-altar #"\s+")) name-public) 
+     ; We could make this more robust - but should be fine for now
+     ::is-group-or-class (and (not (nil? is-group?)) (starts-with? is-group? "YES"))
+     ; ::is-group-or-class is-group?
+     ::submitter-email your-email
+     ::submitter-name your-name}
+    ; And the optional field
+    (when-not (empty? pronunciation) {::procunciation-hints pronunciation}) ))
+
 (defn get-wellbeing-data []
   (->
     (.get js/gapi.client.sheets.spreadsheets.values
           (clj->js {:spreadsheetId wellbeing-sheet
-                    :range "Form Responses!A1:F"}) )
+                    ; This may change as the form changes - even if the same kind of information remains
+                    ; The way Svani is handling this now, we assume all currently visible names are being held
+                    ; Retired names are sent to the archive sheet (this could be automated)
+                    :range "Form Responses!A1:H"}) )
     ; values is the parsed version
     ; For now, we keep all the data - we can filter on the view
-    (.then #(swap! app-data assoc :sheet-data (.. % -result -values))) ))
+    ; We use rest to skip our header row
+    (.then #(swap! app-data assoc :sheet-data (map row-to-held-person (rest (.. % -result -values))))) ))
 
 
 ; This gets registered below as the callback for when authorization state changes
@@ -92,22 +132,24 @@
   [:div
     [:h2 "Wellness Scraper"]
     [:p "First, we authenticate you to Google, then get some data from the Wellenss spreadsheet"]
-    (if (:initialized (rum/react app-data))
-      (if-not (:signed-in? @app-data)
-        [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
-        [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"]
-        ) )
-    ; Since I already react to app-data above, I don't seem to need to again...
-    ; XXX I also added this if clause which is probably unnecessary
-    ; It did NOT resolve the TypeError: Cannot read property 'add' of undefined
-    (if (:sheet-data @app-data)
-      [:pre {:id "content"} 
-       (->> (:sheet-data @app-data)
-            (filter #(s/includes? (aget % 0) "2017"))
-            ; Each line is a list, this joins them in to one string
-            (map #(s/join " " %))
-            ; Then we join the lines
-            (s/join "\n") )])
+    (let [curr-data (rum/react app-data)]
+      (if (:initialized curr-data)
+        (if-not (:signed-in? curr-data)
+          [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
+          [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"]
+          ) )
+      (when-let [records (:sheet-data curr-data)]
+        [:ul {:id "content"} 
+         ; (->> (:sheet-data curr-data)
+              ; We currently assume all visible data is "current"
+              ; (filter #(s/includes? (aget % 0) "2017"))
+              ; Each line is a list, this joins them in to one string
+              (map #(vector :li (::held-name-altar %)) records)
+              ; (map #(join "\t" (vals %)))
+              ; (map #(str (::held-name-altar curr-data)
+              ; Then we join the lines
+              ;(join "\n") 
+              ]))
   ])
 
 (rum/mount (hello-world)
@@ -118,5 +160,3 @@
   ;; your application
   ;; (swap! app-state update-in [:__figwheel_counter] inc)
 )
-
-; (js/alert "Am I connected to Figwheel?")
