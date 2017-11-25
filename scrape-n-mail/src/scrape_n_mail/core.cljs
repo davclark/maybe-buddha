@@ -147,12 +147,27 @@
                [:br] 
                [:p "Dear " (::submitter-name (first name-records)) ","]
                
-               [:p "We are holding:" 
+               [:p "Currently, the community is holding the following names on the altar "
+                   "in support of their wellbeing at your request:" 
                 (into [:ul {:id "content"}]
                   ; We currently assume all visible data is "current"
                   ; (filter #(s/includes? (aget % 0) "2017"))
                   ; Each line is a list, this joins them in to one string
-                  (map #(vector :li (::held-name-altar %)) name-records)) ]]))
+                  (map #(vector :li (::held-name-altar %)) name-records)) 
+                
+                "Please let us know if these names should remain, along with any other names "
+                "you'd like added by (re-)submitting names at "
+                [:a {:href "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform"}
+                "this link"] ". If that link doesn't work, you can copy-paste it into your browser:"]
+
+               [:p "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform"]
+
+               [:p "If we do not hear from you, we will assume they are doing better and "
+                "remove them from the altar."]
+
+               ; Note that the \ is an escape character!
+               [:p "/|\\"]
+                ]))
      ]))
 
 (rum/mount (hello-world)
