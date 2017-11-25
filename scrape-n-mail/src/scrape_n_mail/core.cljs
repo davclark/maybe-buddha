@@ -140,11 +140,20 @@
           [:p "Initializing Google API"])
 
         (when-let [records (:sheet-data curr-data)]
-          (into [:ul {:id "content"}]
-            ; We currently assume all visible data is "current"
-            ; (filter #(s/includes? (aget % 0) "2017"))
-            ; Each line is a list, this joins them in to one string
-            (map #(vector :li (::held-name-altar %)) records))) ]))
+          (for [[submitter-email name-records] (group-by ::submitter-email records)]
+            [
+              [:hr]
+              [:p submitter-email]
+               [:br] 
+               [:p "Dear " (::submitter-name (first name-records)) ","]
+               
+               [:p "We are holding:" 
+                (into [:ul {:id "content"}]
+                  ; We currently assume all visible data is "current"
+                  ; (filter #(s/includes? (aget % 0) "2017"))
+                  ; Each line is a list, this joins them in to one string
+                  (map #(vector :li (::held-name-altar %)) name-records)) ]]))
+     ]))
 
 (rum/mount (hello-world)
            (. js/document (getElementById "app")))
