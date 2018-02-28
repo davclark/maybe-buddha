@@ -1,7 +1,7 @@
 (ns scrape-n-mail.core
     (:require [rum.core :as rum]
               [cljs-http.client :as http]
-              [clojure.string :refer [join split starts-with? trim]]
+              [clojure.string :refer [join split starts-with? trim lower-case]]
               [cljs-time.format :as fmt]
               ; dt is for datetime
               [cljs-time.core :as dt]
@@ -48,19 +48,29 @@
                  ::submitter-email ::submitter-name]
            :opt [::procunciation-hints]))
 
+; this is a bit brittle - based on the structure of the form at some point in time
 (defn row-to-held-person [[timestamp name-for-altar _ pronunciation your-name your-email is-group? name-public]]
   (merge
-    ; Our required fields
-    {::when-submitted (fmt/parse goog-datetime timestamp)
-     ::held-name-altar (trim name-for-altar)
-     ::held-name-public (if (empty? name-public) (first (split name-for-altar #"\s+")) name-public) 
-     ; We could make this more robust - but should be fine for now
-     ::is-group-or-class (and (not (nil? is-group?)) (starts-with? is-group? "YES"))
-     ; ::is-group-or-class is-group?
-     ::submitter-email your-email
-     ::submitter-name your-name}
-    ; And the optional field
-    (when-not (empty? pronunciation) {::procunciation-hints pronunciation}) ))
+    (let [processed-group (and (not (nil? is-group?)) (starts-with? is-group? "YES"))]
+      ; Our required fields
+      {::when-submitted (fmt/parse goog-datetime timestamp)
+       ::held-name-altar (trim name-for-altar)
+       ; We could make this more robust - but should be fine for now
+       ::is-group-or-class processed-group
+       ; The logic is a little complex
+       ; If we lack a public name, we propose one - if it's a group, we just
+       ; use the full text, otherwise we use the first word of the altar name.
+       ; We likely need a dictionary for stop-words like "Ms."
+       ::held-name-public (if (empty? name-public) 
+                            (if processed-group
+                              name-for-altar
+                              (first (split name-for-altar #"\s+")) )
+                            name-public)
+       ; ::is-group-or-class is-group?
+       ::submitter-email (trim (lower-case your-email))
+       ::submitter-name (trim your-name)} )
+      ; And the optional field
+      (when-not (empty? pronunciation) {::procunciation-hints pronunciation}) ))
 
 (defn get-wellbeing-data []
   (->
@@ -127,8 +137,30 @@
           (.load js/gapi "client:auth2" #(init-client config-keys)) )
         #_(println keys-resp) )))
 
+(defn prefilled-link [{name-altar ::held-name-altar
+                       name-public ::held-name-public
+                       pronunciation ::procunciation-hints
+                       group ::is-group-or-class
+                       submitter-name ::submitter-name
+                       submitter-email ::submitter-email}]
+  ; Format into links like this:
+  ; https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform?usp=pp_url&entry.1145228181=name-for-altar&entry.2041965689=name-for-public&entry.1791240241=pronunciation-hints&entry.628312063=YES,+this+is+a+group&entry.552838120=your-name&entry.681476151=your-email 
+  ; https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform?usp=pp_url&entry.1145228181&entry.2041965689&entry.1791240241&entry.552838120&entry.681476151
+  (let [url-root 
+        "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform?usp=pp_url"
+        custom-url
+        (join \& [ url-root
+                  (str "entry.1145228181=" name-altar)
+                  (str "entry.2041965689=" name-public)
+                  (str "entry.1791240241=" pronunciation)
+                  (if group "entry.628312063=YES,+this+is+a+group")
+                  (str "entry.552838120=" submitter-name)
+                  (str "entry.681476151=" submitter-email)])]
 
-(rum/defc hello-world < rum/reactive []
+    [:a {:href custom-url} name-altar]
+  ))
+
+(rum/defc scrape-it < rum/reactive []
   (let [curr-data (rum/react app-data)]
     [:div
       [:h2 "Wellness Scraper"]
@@ -148,29 +180,30 @@
                [:p "Dear " (::submitter-name (first name-records)) ","]
                
                [:p "Currently, the community is holding the following names on the altar "
-                   "in support of their wellbeing at your request:" 
+                   "in support of their wellbeing at your request. This month, you can click "
+                   "directly on each name you would like to remain and get a pre-filled form. "
+                   "Please check each submission before clicking the submit button, and let Dav know if there is anything incorrect." 
                 (into [:ul {:id "content"}]
                   ; We currently assume all visible data is "current"
                   ; (filter #(s/includes? (aget % 0) "2017"))
                   ; Each line is a list, this joins them in to one string
-                  (map #(vector :li (::held-name-altar %)) name-records)) 
-                
-                "Please let us know if these names should remain, along with any other names "
-                "you'd like added by (re-)submitting names at "
+                  ; (map #(vector :li (::held-name-altar %)) name-records)) 
+                  (map #(vector :li (prefilled-link %)) name-records))
+                   
+                "New names may be submitted at "
                 [:a {:href "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform"}
-                "this link"] ". If that link doesn't work, you can copy-paste it into your browser:"]
+                "this link"] ". If the above links don't work, you can copy-paste the form link into your browser:"]
 
                [:p "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform"]
 
-               [:p "If we do not hear from you, we will assume they are doing better and "
-                "remove them from the altar."]
+               [:p "If we do not hear from you, we will remove these names from the altar. Jai mitra!"]
 
                ; Note that the \ is an escape character!
                [:p "/|\\"]
                 ]))
      ]))
 
-(rum/mount (hello-world)
+(rum/mount (scrape-it)
            (. js/document (getElementById "app")))
 
 (defn on-js-reload []
