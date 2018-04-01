@@ -196,6 +196,8 @@
 
                [:p "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform"]
 
+               [:p "Please recall that it is traditional to offer Dana along with the submission of names."]
+
                [:p "If we do not hear from you, we will remove these names from the altar. Jai mitra!"]
 
                ; Note that the \ is an escape character!
