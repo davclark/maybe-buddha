@@ -187,10 +187,10 @@
                   ; We currently assume all visible data is "current"
                   ; (filter #(s/includes? (aget % 0) "2017"))
                   ; Each line is a list, this joins them in to one string
-                  ; (map #(vector :li (::held-name-altar %)) name-records)) 
                   (map #(vector :li (prefilled-link %)) name-records))
                    
                 "New names may be submitted at "
+                
                 [:a {:href "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform"}
                 "this link"] ". If the above links don't work, you can copy-paste the form link into your browser:"]
 
@@ -199,6 +199,8 @@
                [:p "Please recall that it is traditional to offer Dana along with the submission of names."]
 
                [:p "If we do not hear from you, we will remove these names from the altar. Jai mitra!"]
+
+               [:p "As a reminder, it is customary to contribute Dana along with the submission of names." ]
 
                ; Note that the \ is an escape character!
                [:p "/|\\"]
