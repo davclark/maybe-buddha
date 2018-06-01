@@ -164,7 +164,9 @@
   (let [curr-data (rum/react app-data)]
     [:div
       [:h2 "Wellness Scraper"]
-      [:p "First, we authenticate you to Google, then get some data from the Wellenss spreadsheet"]
+      [:p "First, we authenticate you to Google, then get some data from " 
+       [:a {:href "https://docs.google.com/spreadsheets/d/1bv6vgW-HMTz0uhKDkrJoTg387b-WK6IFkFd9y6N96hA/edit#gid=0"}
+        "the Wellenss spreadsheet"]]
         (if (:initialized curr-data)
           (if-not (:signed-in? curr-data)
             [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
@@ -190,17 +192,15 @@
                   (map #(vector :li (prefilled-link %)) name-records))
                    
                 "New names may be submitted at "
-                
+
                 [:a {:href "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform"}
                 "this link"] ". If the above links don't work, you can copy-paste the form link into your browser:"]
 
                [:p "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform"]
 
-               [:p "Please recall that it is traditional to offer Dana along with the submission of names."]
+               [:p [:em "Please recall that it is traditional to offer Dana along with the submission of names."]]
 
                [:p "If we do not hear from you, we will remove these names from the altar. Jai mitra!"]
-
-               [:p "As a reminder, it is customary to contribute Dana along with the submission of names." ]
 
                ; Note that the \ is an escape character!
                [:p "/|\\"]
