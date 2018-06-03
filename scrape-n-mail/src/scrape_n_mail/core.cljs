@@ -22,8 +22,9 @@
 
 (def goog-datetime (fmt/formatter "MM/dd/YYYY HH:mm:ss"))
 
-(defn parse-sheet [sheet-values]
-  (map (fn [dt & rst] (into [(fmt/parse goog-datetime dt)] rst)) sheet-values) )
+; this is not currently used
+; (defn parse-sheet [sheet-values]
+;  (map (fn [dt & rst] (into [(fmt/parse goog-datetime dt)] rst)) sheet-values) )
 
 ; This works - we need to deal with the fact that it's js!
 ; (map #(fmt/parse goog-datetime (aget % 0)) [first-row])
@@ -53,7 +54,9 @@
   (merge
     (let [processed-group (and (not (nil? is-group?)) (starts-with? is-group? "YES"))]
       ; Our required fields
-      {::when-submitted (fmt/parse goog-datetime timestamp)
+      ; I'm not actually using the timestamp now (just manually editing the
+      ; spreadsheet) so this is rather unnecessary (and brittle)
+      {::when-submitted timestamp  ; (fmt/parse goog-datetime timestamp)
        ::held-name-altar (trim name-for-altar)
        ; We could make this more robust - but should be fine for now
        ::is-group-or-class processed-group
