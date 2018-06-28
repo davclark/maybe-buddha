@@ -19,6 +19,7 @@
                          :signed-in? false
                          :sheet-data nil}))
 (defonce wellbeing-sheet "1bv6vgW-HMTz0uhKDkrJoTg387b-WK6IFkFd9y6N96hA")
+(defonce payment-link "https://www.paypal.me/pools/c/85ChNpjaRV")
 
 (def goog-datetime (fmt/formatter "MM/dd/YYYY HH:mm:ss"))
 
