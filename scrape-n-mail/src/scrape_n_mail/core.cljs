@@ -18,6 +18,7 @@
 (defonce app-data (atom {:initialized false
                          :signed-in? false
                          :sheet-data nil}))
+(defonce blank-form "https://goo.gl/forms/u9R2JEREElx89yOf2")
 (defonce wellbeing-sheet "1bv6vgW-HMTz0uhKDkrJoTg387b-WK6IFkFd9y6N96hA")
 (defonce payment-link "https://www.paypal.me/pools/c/85ChNpjaRV")
 
@@ -184,11 +185,16 @@
               [:p submitter-email]
                [:br] 
                [:p "Dear " (::submitter-name (first name-records)) ","]
-               
+
+               [:p "You should have recently recieved the monthly announcement for the renewal of "
+                   "names for wellbeing. That email goes into more detail than this one and includes a photo of the altar. "]
+
                [:p "Currently, the community is holding the following names on the altar "
-                   "in support of their wellbeing at your request. This month, you can click "
+                   "in support of their wellbeing at your request. You can click "
                    "directly on each name you would like to remain and get a pre-filled form. "
-                   "Please check each submission before clicking the submit button, and let Dav know if there is anything incorrect." 
+                   "Please check each submission before clicking the submit button, and let Dav know "
+                   "if there is anything incorrect." 
+
                 (into [:ul {:id "content"}]
                   ; We currently assume all visible data is "current"
                   ; (filter #(s/includes? (aget % 0) "2017"))
@@ -196,15 +202,16 @@
                   (map #(vector :li (prefilled-link %)) name-records))
                    
                 "New names may be submitted at "
+                [:a {:href blank-form} "this link"] 
+                ". If the above links don't work, you can copy-paste the form link into your browser:"]
 
-                [:a {:href "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform"}
-                "this link"] ". If the above links don't work, you can copy-paste the form link into your browser:"]
+               [:p blank-form]
 
-               [:p "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform"]
+               [:p [:em "As explained in the group email, it is traditional to offer Dana "
+                        "along with the submission of names. Here's "
+                        [:a {:href payment-link} "the link."]]]
 
-               [:p [:em "Please recall that it is traditional to offer Dana along with the submission of names."]]
-
-               [:p "If we do not hear from you, we will remove these names from the altar. Jai mitra!"]
+               [:p "If we do not hear from you, we will remove these names from the altar. J'ai mitra!"]
 
                ; Note that the \ is an escape character!
                [:p "/|\\"]
