@@ -186,8 +186,7 @@
                [:br] 
                [:p "Dear " (::submitter-name (first name-records)) ","]
 
-               [:p "You should have recently recieved the monthly announcement for the renewal of "
-                   "names for wellbeing. That email goes into more detail than this one and includes a photo of the altar. "]
+               [:p "Our call for names for Wellbeing for August 2018 is out: http://center.transformativechange.org/?p=1883"]
 
                [:p "Currently, the community is holding the following names on the altar "
                    "in support of their wellbeing at your request. You can click "
