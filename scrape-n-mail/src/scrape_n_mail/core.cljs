@@ -142,6 +142,7 @@
           (.load js/gapi "client:auth2" #(init-client config-keys)) )
         #_(println keys-resp) )))
 
+; TODO - make this generic so it only adds the fields that are specified
 (defn prefilled-link [{name-altar ::held-name-altar
                        name-public ::held-name-public
                        pronunciation ::procunciation-hints
@@ -165,6 +166,55 @@
     [:a {:href custom-url} name-altar]
   ))
 
+
+(defn name-email-link [{submitter-name ::submitter-name
+                        submitter-email ::submitter-email}]
+  (let [url-root 
+        "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform?usp=pp_url"]
+        (join \& [ url-root
+                  (str "entry.552838120=" submitter-name)
+                  (str "entry.681476151=" submitter-email)])
+  ))
+
+
+(defn email-text [submitter-email name-records]
+  (let [personal-link (name-email-link (first name-records))]
+    [
+      [:hr]
+      [:p submitter-email]
+      [:br] 
+      [:p "Dear " (::submitter-name (first name-records)) ","]
+
+      [:p "Our call for names for Wellbeing for August 2018 is out: "
+          "http://newdharma.transformativechange.org/2018/08/wellbeing-september-2018/"]
+
+      [:p "Currently, the community is holding the following names on the altar "
+          "in support of their wellbeing at your request. You can click "
+          "directly on each name you would like to remain and get a pre-filled form. "
+          "Please check each submission before clicking the submit button, and let Dav know "
+          "if there is anything incorrect." ]
+
+      (into [:ul {:id "content"}]
+        ; We currently assume all visible data is "current"
+        ; (filter #(s/includes? (aget % 0) "2017"))
+        ; Each line is a list, this joins them in to one string
+        (map #(vector :li (prefilled-link %)) name-records))
+
+      [:p "New names may be submitted at " [:a {:href personal-link} "your presonal link"]
+      ". If the above links don't work, you can copy-paste the form link into your browser:"]
+
+      [:p personal-link]
+
+      [:p [:em "As explained in the group email, it is traditional to offer Dana "
+               "along with the submission of names. Here's "
+               [:a {:href payment-link} "the link."]]]
+
+      [:p "If we do not hear from you, we will remove the above names from the altar. J'ai mitra!"]
+
+      ; Note that the \ is an escape character!
+      [:p "/|\\"]
+    ]))
+
 (rum/defc scrape-it < rum/reactive []
   (let [curr-data (rum/react app-data)]
     [:div
@@ -180,41 +230,7 @@
 
         (when-let [records (:sheet-data curr-data)]
           (for [[submitter-email name-records] (group-by ::submitter-email records)]
-            [
-              [:hr]
-              [:p submitter-email]
-               [:br] 
-               [:p "Dear " (::submitter-name (first name-records)) ","]
-
-               [:p "Our call for names for Wellbeing for August 2018 is out: http://center.transformativechange.org/?p=1883"]
-
-               [:p "Currently, the community is holding the following names on the altar "
-                   "in support of their wellbeing at your request. You can click "
-                   "directly on each name you would like to remain and get a pre-filled form. "
-                   "Please check each submission before clicking the submit button, and let Dav know "
-                   "if there is anything incorrect." 
-
-                (into [:ul {:id "content"}]
-                  ; We currently assume all visible data is "current"
-                  ; (filter #(s/includes? (aget % 0) "2017"))
-                  ; Each line is a list, this joins them in to one string
-                  (map #(vector :li (prefilled-link %)) name-records))
-                   
-                "New names may be submitted at "
-                [:a {:href blank-form} "this link"] 
-                ". If the above links don't work, you can copy-paste the form link into your browser:"]
-
-               [:p blank-form]
-
-               [:p [:em "As explained in the group email, it is traditional to offer Dana "
-                        "along with the submission of names. Here's "
-                        [:a {:href payment-link} "the link."]]]
-
-               [:p "If we do not hear from you, we will remove these names from the altar. J'ai mitra!"]
-
-               ; Note that the \ is an escape character!
-               [:p "/|\\"]
-                ]))
+            (email-text submitter-email name-records) ))
      ]))
 
 (rum/mount (scrape-it)
