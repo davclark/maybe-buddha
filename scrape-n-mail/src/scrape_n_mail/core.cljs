@@ -185,7 +185,7 @@
       [:br] 
       [:p "Dear " (::submitter-name (first name-records)) ","]
 
-      [:p "Our call for names for Wellbeing for October 2018 is out: "
+      [:p "Our call for names for Wellbeing for November 2018 is out: "
           "http://newdharma.transformativechange.org/2018/09/wellbeing-october-2018/"]
 
       [:p "Currently, the community is holding the following names on the altar "
