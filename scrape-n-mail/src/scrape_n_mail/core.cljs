@@ -185,7 +185,7 @@
       [:br] 
       [:p "Dear " (::submitter-name (first name-records)) ","]
 
-      [:p "Our general call for names for Wellbeing for January 2019 has gone out to the newDharma mailing list."]
+      [:p "Our general call for names for Wellbeing for March 2019 has gone out to the newDharma mailing list."]
 
       [:p "Currently, the community is holding the following names on the altar "
           "in support of their wellbeing at your request. You can click "
