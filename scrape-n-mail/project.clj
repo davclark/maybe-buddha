@@ -14,6 +14,7 @@
                  [rum "0.10.8"]
                  [cljs-http "0.1.43"]
                  [com.andrewmcveigh/cljs-time "0.5.0"]
+                 [javax.xml.bind/jaxb-api "2.4.0-b180830.0359"]
                  ]
 
   ; If you update the figwheel version, be sure to also update the figwheel-sidecar version below!
