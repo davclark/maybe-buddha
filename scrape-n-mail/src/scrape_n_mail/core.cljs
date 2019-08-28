@@ -39,6 +39,7 @@
 (s/def ::held-name-public string?)
 (s/def ::procunciation-hints string?)
 (s/def ::is-group-or-class boolean?)
+(s/def ::renew-indefinitely boolean?)
 ; XXX This is copy-pasted validation. May need to examine to make sure it's good
 (def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
 (s/def ::submitter-email (s/and string? #(re-matches email-regex %)))
@@ -48,11 +49,13 @@
   (s/keys :req [::when-submitted  ; a last-updated field would also be nice
                  ::held-name-altar ::held-name-public
                  ::is-group-or-class
-                 ::submitter-email ::submitter-name]
+                 ::submitter-email ::submitter-name
+                 ::renew-indefinitely]
            :opt [::procunciation-hints]))
 
 ; this is a bit brittle - based on the structure of the form at some point in time
-(defn row-to-held-person [[timestamp name-for-altar _ pronunciation your-name your-email is-group? name-public]]
+(defn row-to-held-person [[timestamp name-for-altar _ pronunciation your-name 
+                           your-email is-group? name-public _ _ renew-indefinitely]]
   (merge
     (let [processed-group (and (not (nil? is-group?)) (starts-with? is-group? "YES"))]
       ; Our required fields
@@ -72,8 +75,9 @@
                               (first (split name-for-altar #"\s+")) )
                             name-public)
        ; ::is-group-or-class is-group?
-       ::submitter-email (trim (lower-case your-email))
-       ::submitter-name (trim your-name)} )
+       ::submitter-email (trim (lower-case (str your-email)))
+       ::submitter-name (trim (str your-name))
+       ::renew-indefinitely (not (= "" (str renew-indefinitely)))} )
       ; And the optional field
       (when-not (empty? pronunciation) {::procunciation-hints pronunciation}) ))
 
@@ -84,7 +88,7 @@
                     ; This may change as the form changes - even if the same kind of information remains
                     ; The way Svani is handling this now, we assume all currently visible names are being held
                     ; Retired names are sent to the archive sheet (this could be automated)
-                    :range "Form Responses!A1:H"}) )
+                    :range "Form Responses!A1:K"}) )
     ; values is the parsed version
     ; For now, we keep all the data - we can filter on the view
     ; We use rest to skip our header row
@@ -148,7 +152,8 @@
                        pronunciation ::procunciation-hints
                        group ::is-group-or-class
                        submitter-name ::submitter-name
-                       submitter-email ::submitter-email}]
+                       submitter-email ::submitter-email
+                       renew-indefinitely ::renew-indefinitely}]
   ; Format into links like this:
   ; https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform?usp=pp_url&entry.1145228181=name-for-altar&entry.2041965689=name-for-public&entry.1791240241=pronunciation-hints&entry.628312063=YES,+this+is+a+group&entry.552838120=your-name&entry.681476151=your-email 
   ; https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform?usp=pp_url&entry.1145228181&entry.2041965689&entry.1791240241&entry.552838120&entry.681476151
@@ -161,7 +166,8 @@
                   (str "entry.1791240241=" pronunciation)
                   (if group "entry.628312063=YES,+this+is+a+group")
                   (str "entry.552838120=" submitter-name)
-                  (str "entry.681476151=" submitter-email)])]
+                  (str "entry.681476151=" submitter-email)
+                  (if renew-indefinitely "entry.1548017252=Yes,+please")])]
 
     [:a {:href custom-url} name-altar]
   ))
@@ -185,7 +191,7 @@
       [:br] 
       [:p "Dear " (::submitter-name (first name-records)) ","]
 
-      [:p "Our general call for names for Wellbeing for July 2019 has gone out to the newDharma mailing list."]
+      [:p "Our general call for names for Wellbeing for September 2019 has gone out to the newDharma mailing list."]
 
       [:p "Currently, the community is holding the following names on the altar "
           "in support of their wellbeing at your request. Click "
@@ -199,7 +205,7 @@
         ; Each line is a list, this joins them in to one string
         (map #(vector :li (prefilled-link %)) name-records))
 
-      [:p "New names may be submitted at " [:a {:href personal-link} "your presonal link"]
+      [:p "New names may be submitted at " [:a {:href personal-link} "your personal link"]
       ". If the above links don't work, you can copy-paste the form link into your browser:"]
 
       [:p personal-link]
@@ -208,7 +214,9 @@
                "along with the submission of names. Here's "
                [:a {:href payment-link} "the link."]]]
 
-      [:p "If we do not hear from you, we will remove the above names from the altar. J'ai mitra!"]
+      [:p "If we do not hear from you, we will remove the above names from the altar "
+          "unless you've checked the \"Renew until further notice?\" box on the form. "
+          "J'ai mitra!"]
 
       ; Note that the \ is an escape character!
       [:p "/|\\"]
