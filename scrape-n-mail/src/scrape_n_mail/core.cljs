@@ -191,7 +191,7 @@
       [:br] 
       [:p "Dear " (::submitter-name (first name-records)) ","]
 
-      [:p "Our general call for names for Wellbeing for November 2019 has gone out to the newDharma mailing list."]
+      [:p "Our general call for names for Wellbeing for December 2019 has gone out to the newDharma mailing list."]
 
       [:p "Currently, the community is holding the following names on the altar "
           "in support of their wellbeing at your request. Click "
@@ -215,7 +215,8 @@
                [:a {:href payment-link} "the link."]]]
 
       [:p "If we do not hear from you, we will remove the above names from the altar "
-          "unless you've checked the \"Renew until further notice?\" box on the form. "
+          "unless you had checked the \"Renew until further notice?\" box on the form. "
+          "But please renew them if you can so that we can transition away from this \"indefinite\" approach. "
           "J'ai mitra!"]
 
       ; Note that the \ is an escape character!
