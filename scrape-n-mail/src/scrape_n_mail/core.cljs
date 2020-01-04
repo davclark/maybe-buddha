@@ -53,6 +53,10 @@
                  ::renew-indefinitely]
            :opt [::procunciation-hints]))
 
+(defn first-name [full-name]
+  ; We likely need a dictionary for stop-words like "Ms."
+  (first (split full-name #"\s+")) )
+
 ; this is a bit brittle - based on the structure of the form at some point in time
 (defn row-to-held-person [[timestamp name-for-altar _ pronunciation your-name 
                            your-email is-group? name-public _ _ renew-indefinitely]]
@@ -68,16 +72,14 @@
        ; The logic is a little complex
        ; If we lack a public name, we propose one - if it's a group, we just
        ; use the full text, otherwise we use the first word of the altar name.
-       ; We likely need a dictionary for stop-words like "Ms."
-       ::held-name-public (if (empty? name-public) 
+       ::held-name-public (if (empty? name-public)
                             (if processed-group
                               name-for-altar
-                              (first (split name-for-altar #"\s+")) )
+                              (first-name name-for-altar))
                             name-public)
        ; ::is-group-or-class is-group?
        ::submitter-email (trim (lower-case (str your-email)))
-       ::submitter-name (trim (str your-name))
-       ::renew-indefinitely (not (= "" (str renew-indefinitely)))} )
+       ::submitter-name (trim (str your-name)) })
       ; And the optional field
       (when-not (empty? pronunciation) {::procunciation-hints pronunciation}) ))
 
@@ -100,7 +102,7 @@
 (defn update-after-auth [is-signed-in]
   (swap! app-data assoc :signed-in? is-signed-in)
   (if is-signed-in
-    (get-wellbeing-data) 
+    (get-wellbeing-data)
     (swap! app-data assoc :sheet-data nil) ))
 
 
@@ -122,7 +124,7 @@
              )))
 
 ; In retrospect, this was not really useful (these keys aren't secret).
-; We're also hurting performance a little, but it's not relevant to our 
+; We're also hurting performance a little, but it's not relevant to our
 ; use-case so I'm leaving it alone.
 (go (let [keys-resp (<! (http/get "keys.json"))]
       ; (println keys-resp)
@@ -167,7 +169,7 @@
                   (if group "entry.628312063=YES,+this+is+a+group")
                   (str "entry.552838120=" submitter-name)
                   (str "entry.681476151=" submitter-email)
-                  (if renew-indefinitely "entry.1548017252=Yes,+please")])]
+                  ])]
 
     [:a {:href custom-url} name-altar]
   ))
@@ -189,9 +191,9 @@
       [:hr]
       [:p submitter-email]
       [:br] 
-      [:p "Dear " (::submitter-name (first name-records)) ","]
+      [:p "Dear " (first-name (::submitter-name (first name-records))) ","]
 
-      [:p "Our general call for names for Wellbeing for December 2019 has gone out to the newDharma mailing list."]
+      [:p "Our general call for names for Wellbeing for January 2020 has gone out to the newDharma mailing list."]
 
       [:p "Currently, the community is holding the following names on the altar "
           "in support of their wellbeing at your request. Click "
@@ -214,9 +216,7 @@
                "along with the submission of names. Here's "
                [:a {:href payment-link} "the link."]]]
 
-      [:p "If we do not hear from you, we will remove the above names from the altar "
-          "unless you had checked the \"Renew until further notice?\" box on the form. "
-          "But please renew them if you can so that we can transition away from this \"indefinite\" approach. "
+      [:p "If we do not hear from you, we will remove the above names from the altar. "
           "J'ai mitra!"]
 
       ; Note that the \ is an escape character!
@@ -227,13 +227,13 @@
   (let [curr-data (rum/react app-data)]
     [:div
       [:h2 "Wellness Scraper"]
-      [:p "First, we authenticate you to Google, then get some data from " 
+      [:p "First, we authenticate you to Google, then get some data from "
        [:a {:href "https://docs.google.com/spreadsheets/d/1bv6vgW-HMTz0uhKDkrJoTg387b-WK6IFkFd9y6N96hA/edit#gid=0"}
         "the Wellenss spreadsheet"]]
         (if (:initialized curr-data)
           (if-not (:signed-in? curr-data)
             [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
-            [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"]) 
+            [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"])
           [:p "Initializing Google API"])
 
         (when-let [records (:sheet-data curr-data)]
