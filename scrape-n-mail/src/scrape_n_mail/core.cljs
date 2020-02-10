@@ -192,8 +192,9 @@
       [:p submitter-email]
       [:br] 
       [:p "Dear " (first-name (::submitter-name (first name-records))) ","]
-
-      [:p "Our general call for names for Wellbeing for January 2020 has gone out to the newDharma mailing list."]
+ 
+      [:p "Our general call for names for Wellbeing for February 2020 has gone out to the newDharma mailing list."
+          " Please respond to the inquiry there about a collective online ceremony!"]
 
       [:p "Currently, the community is holding the following names on the altar "
           "in support of their wellbeing at your request. Click "
