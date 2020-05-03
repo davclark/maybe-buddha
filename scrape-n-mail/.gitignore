@@ -13,3 +13,8 @@ pom.xml
 .nrepl-port
 secrets.txt
 .cljs_rhino_repl/
+.shadow-cljs/
+node_modules/
+resources/public/cljs-runtime/
+resources/public/main.js
+resources/public/manifest.edn
