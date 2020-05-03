@@ -9,8 +9,8 @@
               ; [cljs.spec :as s]
               ))
 
-; (enable-console-print!)
-; (println "This text is printed from src/scrape-n-mail/core.cljs.")
+(enable-console-print!)
+(println "This text is printed from src/scrape-n-mail/core.cljs.")
 
 ;; define your app data so that it doesn't get over-written on reload
 
@@ -225,6 +225,7 @@
 
 (rum/defc scrape-it < rum/reactive []
   (let [curr-data (rum/react app-data)]
+    (println curr-data)
     [:div
       [:h2 "Wellness Scraper"]
       [:p "First, we authenticate you to Google, then get some data from "
