@@ -193,8 +193,8 @@
       [:br] 
       [:p "Dear " (first-name (::submitter-name (first name-records))) ","]
  
-      [:p "Our general call for names for Wellbeing for March 2020 has gone out to the newDharma mailing list."
-          " Please let me know if you want to join me for a wellbeing sit - it would be great to see you! (details are in that general call)"]
+      [:p "Our general call for names for Wellbeing for May 2020 has gone out to the newDharma mailing list."
+          " Please let me (Dav) know if you want to join us for a wellbeing sit - it would be great to see you! (details are in that general call)"]
 
       [:p "Currently, the community is holding the following names on the altar "
           "in support of their wellbeing at your request. Click "
