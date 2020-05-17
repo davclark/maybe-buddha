@@ -1,11 +1,19 @@
-{:source-paths ["src"]
- :dependencies [[org.clojure/core.async  "1.1.587"]
+;; shadow-cljs configuration
+{:source-paths
+ ["src/dev"
+  "src/main"
+  "src/test"]
+
+ :dependencies [;[org.clojure/core.async  "1.1.587"]
                 [rum "0.11.5"]
-                [cljs-http "0.1.43"]
-                [com.andrewmcveigh/cljs-time "0.5.0"]
-                [javax.xml.bind/jaxb-api "2.4.0-b180830.0359"]]
- :dev-http {3449 "resources/public"}
- :builds {:app {:output-dir "resources/public"
-                :asset-path "."
-                :target :browser
-                :modules {:main {:entries [scrape-n-mail.core]}}}}}
+                ;[cljs-http "0.1.43"]
+                [com.andrewmcveigh/cljs-time "0.5.2"]
+                ; at some point install binaryage/devtools for Chrome dev
+                ]
+
+ :dev-http {3449 "public"}
+ :builds
+ {:frontend
+  {:target :browser
+   :modules {:main {:init-fn scrape-n-mail.core/init}}
+   }}}
