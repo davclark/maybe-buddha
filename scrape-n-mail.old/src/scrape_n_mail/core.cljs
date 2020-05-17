@@ -5,13 +5,12 @@
               [cljs-time.format :as fmt]
               ; dt is for datetime
               [cljs-time.core :as dt]
-              [cljs.core.async :refer [<!]]
-              [cljs.spec :as s])
-    (:require-macros [cljs.core.async.macros :refer [go go-loop]])
-    )
+              [cljs.core.async :refer [<! go]]
+              ; [cljs.spec :as s]
+              ))
 
-; (enable-console-print!)
-; (println "This text is printed from src/scrape-n-mail/core.cljs.")
+(enable-console-print!)
+(println "This text is printed from src/scrape-n-mail/core.cljs.")
 
 ;; define your app data so that it doesn't get over-written on reload
 
@@ -34,24 +33,24 @@
 ; We begin to describe what kind of information is in one record
 ; i.e., line in the spreadsheet
 
-(s/def ::when-submitted dt/date?)
-(s/def ::held-name-altar string?)
-(s/def ::held-name-public string?)
-(s/def ::procunciation-hints string?)
-(s/def ::is-group-or-class boolean?)
-(s/def ::renew-indefinitely boolean?)
+; (s/def ::when-submitted dt/date?)
+; (s/def ::held-name-altar string?)
+; (s/def ::held-name-public string?)
+; (s/def ::procunciation-hints string?)
+; (s/def ::is-group-or-class boolean?)
+; (s/def ::renew-indefinitely boolean?)
 ; XXX This is copy-pasted validation. May need to examine to make sure it's good
-(def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
-(s/def ::submitter-email (s/and string? #(re-matches email-regex %)))
-(s/def ::submitter-name string?)
+; (def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
+; (s/def ::submitter-email (s/and string? #(re-matches email-regex %)))
+; (s/def ::submitter-name string?)
 
-(s/def ::held-person
-  (s/keys :req [::when-submitted  ; a last-updated field would also be nice
-                 ::held-name-altar ::held-name-public
-                 ::is-group-or-class
-                 ::submitter-email ::submitter-name
-                 ::renew-indefinitely]
-           :opt [::procunciation-hints]))
+;; (s/def ::held-person
+;;   (s/keys :req [::when-submitted  ; a last-updated field would also be nice
+;;                  ::held-name-altar ::held-name-public
+;;                  ::is-group-or-class
+;;                  ::submitter-email ::submitter-name
+;;                  ::renew-indefinitely]
+;;            :opt [::procunciation-hints]))
 
 (defn first-name [full-name]
   ; We likely need a dictionary for stop-words like "Ms."
@@ -226,6 +225,7 @@
 
 (rum/defc scrape-it < rum/reactive []
   (let [curr-data (rum/react app-data)]
+    (println curr-data)
     [:div
       [:h2 "Wellness Scraper"]
       [:p "First, we authenticate you to Google, then get some data from "

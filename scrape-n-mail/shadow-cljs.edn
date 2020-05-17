@@ -1,0 +1,17 @@
+;; shadow-cljs configuration
+{:source-paths
+ ["src/dev"
+  "src/main"
+  "src/test"]
+
+ :dependencies [[rum "0.11.5"]
+                ;[com.andrewmcveigh/cljs-time "0.5.2"]
+                ; at some point install binaryage/devtools for Chrome dev
+                ]
+
+ :dev-http {3449 "public"}
+ :builds
+ {:frontend
+  {:target :browser
+   :modules {:main {:init-fn scrape-n-mail.core/init}}
+   }}}

@@ -1,6 +1,6 @@
 (defproject scrape-n-mail "0.1.0-SNAPSHOT"
-  :description "FIXME: write this!"
-  :url "http://example.com/FIXME"
+  :description "Read some stuff from a Google Sheet and display draft messages"
+  :url "https://bead.glass"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 

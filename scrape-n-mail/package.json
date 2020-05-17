@@ -1,0 +1,16 @@
+{
+  "name": "scrape-n-mail",
+  "version": "0.1.1",
+  "private": true,
+  "scripts": {
+    "watch": "shadow-cljs watch frontend",
+    "compile": "shadow-cljs compile frontend",
+    "release": "shadow-cljs release frontend"
+  },
+  "devDependencies": {
+    "shadow-cljs": "2.9.6",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
+  "dependencies": {}
+}
