@@ -10,20 +10,15 @@
   <body>
     <div id="app">
       <h2>Wellness Scraper</h2>
-      <p>App is loading (or not)</p>
+      <p>Display logic not (yet) loaded...</p>
     </div>
 
-    <!-- Something like the below could be more performant if things get complex -->
-    <!-- <script async defer src="https://apis.google.com/js/api.js" -->
-    <!--   onload="this.onload=function(){};handleClientLoad()" -->
-    <!--   onreadystatechange="if (this.readyState === 'complete') this.onload()"> -->
-    <!-- </script> -->
-
     <hr>
-    <!--Add buttons to initiate auth sequence and sign out-->
+    <!--buttons to initiate auth sequence and sign out-->
     <button id="authorize_button" style="display: none;">Authorize</button>
     <button id="signout_button" style="display: none;">Sign Out</button>
 
+    <!--This is currently only for error reporting-->
     <pre id="content" style="white-space: pre-wrap;"></pre>
 
     <script src="https://apis.google.com/js/api.js" type="text/javascript"></script>
@@ -126,7 +121,6 @@
         }).then(function(response) {
             scrape_n_mail.core.update_wellbeing_data(response.result.values);
         }, function(response) {
-          // XXX change this to send the error to our view logic in cljs!
           appendPre('Error: ' + response.result.error.message);
         });
       }

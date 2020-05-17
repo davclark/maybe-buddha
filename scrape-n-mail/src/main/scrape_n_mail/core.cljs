@@ -1,26 +1,21 @@
 (ns scrape-n-mail.core
     (:require [rum.core :as rum]
               [clojure.string :refer [join split starts-with? trim lower-case]]
-              [cljs-time.format :as fmt]
-              ; dt is for datetime
-              [cljs-time.core :as dt]
-              [cljs.core.async :refer [<! go]]
-              ; [cljs.spec :as s]
+              ; [cljs-time.format :as fmt]
               ))
 
 (enable-console-print!)
-(println "This text is printed from src/scrape-n-mail/core.cljs.")
+(println "This text is printed from src/main/scrape-n-mail/core.cljs.")
 
-;; define your app data so that it doesn't get over-written on reload
-
-(defonce app-data (atom {:initialized false
-                         :signed-in? false
-                         :sheet-data nil}))
+;; define app data so that it doesn't get over-written on reload
+;; We use a map so we can easily add other data here
+(defonce app-data (atom {:sheet-data nil}))
 (defonce blank-form "https://goo.gl/forms/u9R2JEREElx89yOf2")
 (defonce wellbeing-sheet "1bv6vgW-HMTz0uhKDkrJoTg387b-WK6IFkFd9y6N96hA")
 (defonce payment-link "https://www.paypal.me/pools/c/85ChNpjaRV")
 
-(def goog-datetime (fmt/formatter "MM/dd/YYYY HH:mm:ss"))
+; Not currently used
+; (def goog-datetime (fmt/formatter "MM/dd/YYYY HH:mm:ss"))
 
 (defn first-name [full-name]
   ; We likely need a dictionary for stop-words like "Ms."
@@ -52,48 +47,9 @@
       ; And the optional field
       (when-not (empty? pronunciation) {::procunciation-hints pronunciation}) ))
 
-(defn get-wellbeing-data []
-  (->
-    (.get js/gapi.client.sheets.spreadsheets.values
-          (clj->js {:spreadsheetId wellbeing-sheet
-                    ; This may change as the form changes - even if the same kind of information remains
-                    ; The way Svani is handling this now, we assume all currently visible names are being held
-                    ; Retired names are sent to the archive sheet (this could be automated)
-                    :range "Form Responses!A1:K"}) )
-    ; values is the parsed version
-    ; For now, we keep all the data - we can filter on the view
-    ; We use rest to skip our header row
-    (.then #(swap! app-data assoc :sheet-data (map row-to-held-person (rest (.. % -result -values))))) ))
 
-(defn ^:extern update-wellbeing-data [values]
-    (println values)
+(defn ^:export update-wellbeing-data [values]
     (swap! app-data assoc :sheet-data (map row-to-held-person (rest values))))
-
-; This gets registered below as the callback for when authorization state changes
-; It's also called once after the gapi client is set up to initialize things if we're already logged in
-(defn update-after-auth [is-signed-in]
-  (swap! app-data assoc :signed-in? is-signed-in)
-  (if is-signed-in
-    (get-wellbeing-data)
-    (swap! app-data assoc :sheet-data nil) ))
-
-
-; This gets sent as a callback into the .load call for the gapi below in the "go" block
-(defn init-client [gapi_config]
-  (-> (.init js/gapi.client gapi_config)
-      ; I don't actually care about the response, but I need to do something with it maybe?
-      (.then #(let [response %
-                    is-signed-in (.. js/gapi.auth2 getAuthInstance -isSignedIn)]
-               ; Set up a listener per Google's tutorial
-               (.listen is-signed-in update-after-auth)
-               ; Also set the initial value
-               ; Unfortunrately, this often doesn't work if we were already signed in...
-               ; I'm missing something
-               (update-after-auth (.get is-signed-in)) 
-               (swap! app-data assoc :initialized true) )
-             ; This is an error reason
-             #(println %)
-             )))
 
 ; TODO - make this generic so it only adds the fields that are specified
 (defn prefilled-link [{name-altar ::held-name-altar
@@ -104,9 +60,8 @@
                        submitter-email ::submitter-email
                        renew-indefinitely ::renew-indefinitely}]
   ; Format into links like this:
-  ; https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform?usp=pp_url&entry.1145228181=name-for-altar&entry.2041965689=name-for-public&entry.1791240241=pronunciation-hints&entry.628312063=YES,+this+is+a+group&entry.552838120=your-name&entry.681476151=your-email 
-  ; https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform?usp=pp_url&entry.1145228181&entry.2041965689&entry.1791240241&entry.552838120&entry.681476151
-  (let [url-root 
+  ; https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform?usp=pp_url&entry.1145228181=name-for-altar&entry.2041965689=name-for-public&entry.1791240241=pronunciation-hints&entry.628312063=YES,+this+is+a+group&entry.552838120=your-name&entry.681476151=your-email
+  (let [url-root
         "https://docs.google.com/forms/d/e/1FAIpQLSc_FFrH7a_ClDmpAq36vA7gdUd1njmoEK0wfhRNaYcjfLox0w/viewform?usp=pp_url"
         custom-url
         (join \& [ url-root
@@ -136,9 +91,9 @@
     [
       [:hr]
       [:p submitter-email]
-      [:br] 
+      [:br]
       [:p "Dear " (first-name (::submitter-name (first name-records))) ","]
- 
+
       [:p "Our general call for names for Wellbeing for March 2020 has gone out to the newDharma mailing list."
           " Please let me know if you want to join me for a wellbeing sit - it would be great to see you! (details are in that general call)"]
 
@@ -170,27 +125,21 @@
       [:p "/|\\"]
     ]))
 
-(rum/defc scrape-it < rum/reactive []
+(rum/defc display-emails < rum/reactive []
   (let [curr-data (rum/react app-data)]
-    (println curr-data)
     [:div
       [:h2 "Wellness Scraper"]
       [:p "First, we authenticate you to Google, then get some data from "
        [:a {:href "https://docs.google.com/spreadsheets/d/1bv6vgW-HMTz0uhKDkrJoTg387b-WK6IFkFd9y6N96hA/edit#gid=0"}
         "the Wellenss spreadsheet"]]
-        (if (:initialized curr-data)
-          (if-not (:signed-in? curr-data)
-            [:button {:id "authorize-button" :on-click #(.. js/gapi.auth2 getAuthInstance signIn)} "Authorize"]
-            [:button {:id "sign-out-button" :on-click #(.. js/gapi.auth2 getAuthInstance signOut)} "Sign Out"])
-          [:p "Initializing Google API"])
 
-        (when-let [records (:sheet-data curr-data)]
+        (if-let [records (:sheet-data curr-data)]
           (for [[submitter-email name-records] (group-by ::submitter-email records)]
             (email-text submitter-email name-records) ))
      ]))
 
 (defn ^:export init []
-  (rum/mount (scrape-it)
+  (rum/mount (display-emails)
              (. js/document (getElementById "app"))))
 
 (defn on-js-reload []
