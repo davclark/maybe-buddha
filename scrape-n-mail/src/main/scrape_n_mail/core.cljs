@@ -22,7 +22,7 @@
   (first (split full-name #"\s+")) )
 
 ; this is a bit brittle - based on the structure of the form at some point in time
-(defn row-to-held-person [[timestamp name-for-altar _ pronunciation your-name 
+(defn row-to-held-person [[timestamp name-for-altar _ pronunciation your-name
                            your-email is-group? name-public _ _ renew-indefinitely]]
   (merge
     (let [processed-group (and (not (nil? is-group?)) (starts-with? is-group? "YES"))]
@@ -94,8 +94,8 @@
       [:br]
       [:p "Dear " (first-name (::submitter-name (first name-records))) ","]
 
-      [:p "Our general call for names for Wellbeing for March 2020 has gone out to the newDharma mailing list."
-          " Please let me know if you want to join me for a wellbeing sit - it would be great to see you! (details are in that general call)"]
+      [:p "Our general call for names for Wellbeing for June 2020 has gone out to the newDharma mailing list."
+          " newDharma currently meets remotely over Zoom - so we especially encourage you to join us on the first Tuesday of June, the 2nd, as we place new names on the altar."]
 
       [:p "Currently, the community is holding the following names on the altar "
           "in support of their wellbeing at your request. Click "

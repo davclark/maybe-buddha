@@ -5,7 +5,8 @@
   "scripts": {
     "watch": "shadow-cljs watch frontend",
     "compile": "shadow-cljs compile frontend",
-    "release": "shadow-cljs release frontend"
+    "release": "shadow-cljs release frontend",
+    "repl": "shadow-cljs cljs-repl frontend"
   },
   "devDependencies": {
     "shadow-cljs": "2.9.6",
