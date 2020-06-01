@@ -9,9 +9,10 @@
     "repl": "shadow-cljs cljs-repl frontend"
   },
   "devDependencies": {
-    "shadow-cljs": "2.9.6",
     "react": "^16.8.6",
-    "react-dom": "^16.8.6"
+    "react-dom": "^16.8.6",
+    "shadow-cljs": "2.9.6",
+    "wired-elements": "^2.0.5"
   },
   "dependencies": {}
 }

@@ -1,8 +1,7 @@
 ;; shadow-cljs configuration
-{:source-paths
- ["src/dev"
-  "src/main"
-  "src/test"]
+{:source-paths ["src/main" "src/test"]
+
+ :js-options {:js-package-dirs ["node_modules"]}
 
  :dependencies [[rum "0.11.5"]
                 ;[com.andrewmcveigh/cljs-time "0.5.2"]

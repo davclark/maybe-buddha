@@ -2,6 +2,7 @@
     (:require [rum.core :as rum]
               [clojure.string :refer [join split starts-with? trim lower-case]]
               ; [cljs-time.format :as fmt]
+              ["wired-elements" :as wired-elements]
               ))
 
 (enable-console-print!)
