@@ -94,8 +94,8 @@
       [:br]
       [:p "Dear " (first-name (::submitter-name (first name-records))) ","]
 
-      [:p "Our general call for names for Wellbeing for June 2020 has gone out to the newDharma mailing list."
-          " newDharma currently meets remotely over Zoom - so we especially encourage you to join us on the first Tuesday of June, the 2nd, as we place new names on the altar."]
+      [:p "Our general call for names for Wellbeing for July 2020 has gone out to the newDharma mailing list."
+          " newDharma currently meets remotely over Zoom - so we especially encourage you to join us on the first Tuesday of July, the 7th, as we place new names on the altar."]
 
       [:p "Currently, the community is holding the following names on the altar "
           "in support of their wellbeing at your request. Click "
