@@ -49,7 +49,8 @@
 
 
 (defn ^:export update-wellbeing-data [values]
-    (swap! app-data assoc :sheet-data (map row-to-held-person (rest values))))
+    (swap! app-data assoc :sheet-data (map row-to-held-person 
+                                           (remove empty? (rest values)))))
 
 ; TODO - make this generic so it only adds the fields that are specified
 (defn prefilled-link [{name-altar ::held-name-altar
